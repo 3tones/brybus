@@ -2,12 +2,12 @@ brybus
 ======
 brybus is a set of python packages and scripts to provide a framework to communicate on a Bryant Evolution or Carrier Infinity communications bus.
 
-brybus.py provides a stream and bus class to attach to a data source and deal with timing and framing.
+brybus.py provides a stream and bus class to attach to a data source and deal with timing and framing.  It also provides a queue for frames to put on the bus.
 
-bryqueue.py provides a queue of frames to put on the bus (used in scripts)
+readraw.py is a sample script showing the use of the classes.
 
-readraw.py is a sample script showing the use of the classes
+scandevtable.py takes a multi phase approach to scan your entire bus looking for valid data registers, and outputs that information to myregisters.csv.
 
-scandevtable.py scans your entire bus looking for valid data registers
+scanalldata.py uses myregisters.csv to read all valid data registers, and outputs that information to mydata.txt.
 
-scanalltables.py uses the output from scandevtable.py to read all valid data registers
+tableascii.py reads mydata.txt and outputs any valid ASCII data.
