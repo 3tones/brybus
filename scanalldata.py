@@ -5,10 +5,6 @@ scriptstart =  time.time()
 import csv
 
 import brybus
-import bryqueue
-import bryfunc
-ByteToHex = bryfunc.ByteToHex
-HexToByte = bryfunc.HexToByte
 
 def scantable():
   #load data from csv
@@ -20,7 +16,7 @@ def scantable():
   for row in tfin:
     registers.append(row)
   
-  scan_q = bryqueue.writequeue()
+  scan_q = brybus.writequeue()
   
   print "Building Queue"
   for r in registers:
@@ -55,5 +51,10 @@ while(1):
   #test for end of queue
   if q.writeframe() == '':
     q.printqueue()
+	
+    f = open('mydata.txt', 'w')
+    f.write(q.print_str())
+    f.close()
+	
     print "Seconds Elapsed:",(time.time()-scriptstart)
     exit()  

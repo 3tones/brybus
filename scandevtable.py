@@ -6,10 +6,6 @@ import time
 scriptstart =  time.time()
 
 import brybus
-import bryqueue
-import bryfunc
-ByteToHex = bryfunc.ByteToHex
-HexToByte = bryfunc.HexToByte
 
 #setup the stream and bus
 s = brybus.stream('S','/dev/ttyUSB0')
@@ -26,7 +22,7 @@ while(1):
       if time.time() - ph1_time > 10:
         phase=1        
         #uncomment the next line to force items into the device list
-        #devices.append("XXXX")
+        #devices = ['1F01'];
         print "ending phase 0"
         print "Devices:",devices
     #if variables are not setup do some init stuff one time
@@ -46,7 +42,7 @@ while(1):
       #write
       w = b.write(ph1_q.writeframe())
       if w==1:
-        print "write", ph1_q.printstatus(), ByteToHex(ph1_q.writeframe())
+        print "write", ph1_q.printstatus(), brybus.ByteToHex(ph1_q.writeframe())
       if w==2:
         print "pause"
       #read and check frame      
@@ -62,7 +58,8 @@ while(1):
     #initial setup for the queue
     else:  
       print "starting phase 1"
-      ph1_q = bryqueue.writequeue()
+      #devices = ['2001'];
+      ph1_q = brybus.writequeue()
       for d in devices:
         for t in range(1,64): #shorten this for testing - set back to 1-64
           reg = '00' + "{0:02X}".format(t) + '01' 
@@ -86,9 +83,11 @@ while(1):
 
     print "==start all valid table row combinations =="    
     #write csv to console to build final output
+    f = open('myregisters.csv', 'w')
+	
     for k,v in ph1_q.queue.iteritems():
       #for responses that were not an error
-      if v.response.func != '15':
+      if v.response.func not in  ['15','01']:
         #use the first part of the table definition on each row to output 
         output = ''
         output += v.frame.dst + ','
@@ -98,6 +97,7 @@ while(1):
         output += v.response.data[26:30] + ','
         output += v.response.data[30:32] + ','
         #loop over the end of the table definition to define the rows in the table
+        #print v.response.data[30:32], v.response.data
         for r in range(0,int(v.response.data[30:32],16)):
           thisrow = 32+4*r
           #if 0000 is the row definition, it does not exist, so don't print it
@@ -106,7 +106,9 @@ while(1):
             row_output += v.response.data[thisrow:thisrow+2] + ','
             row_output += v.response.data[thisrow+2:thisrow+4]
             print output+row_output
+            f.write(output+row_output+'\n')
 
     print "Seconds Elapsed:",(time.time()-scriptstart)
+    f.close()
     exit()
 

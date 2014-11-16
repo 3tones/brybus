@@ -5,24 +5,18 @@
 #frames from the bus
 
 import time
-
 import brybus
-import bryqueue
-import bryfunc
-ByteToHex = bryfunc.ByteToHex
-HexToByte = bryfunc.HexToByte
-
 
 #build a frame if you already know it
 f1 = brybus.frame('400130010300000B000101',"S")
-print "Frame Built: ",ByteToHex(f1.raw)
+print "Frame Built: ",f1.print_str()
 
 #build a frame from parts: data, C for Create, dst, src, function
 f2 = brybus.frame('000101','C','5001','3001','0B')
-print "Frame Built: ",ByteToHex(f2.raw) 
+print "Frame Built: ",f2.print_str()
 
 #build the queue and put the items in it
-q = bryqueue.writequeue()
+q = brybus.writequeue()
 q.pushframe(f1)
 q.pushframe(f2)
 q.printqueue()
