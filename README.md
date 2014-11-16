@@ -15,5 +15,7 @@ tableascii.py reads mydata.txt and outputs any valid ASCII data.
 Requirements
 ============
 http://pyserial.sourceforge.net/
+
 curses module for tableascii.py
+
 mysql support in python for data logging (script not posted yet)
