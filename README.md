@@ -11,3 +11,9 @@ scandevtable.py takes a multi phase approach to scan your entire bus looking for
 scanalldata.py uses myregisters.csv to read all valid data registers, and outputs that information to mydata.txt.
 
 tableascii.py reads mydata.txt and outputs any valid ASCII data.
+
+Requirements
+============
+http://pyserial.sourceforge.net/
+curses module for tableascii.py
+mysql support in python for data logging (script not posted yet)
