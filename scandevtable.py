@@ -93,7 +93,8 @@ while(1):
         output += v.frame.dst + ','
         output += v.frame.data[2:4] + ','
         output += v.response.data[6:10] + ','
-        output += v.response.data[10:26].decode('hex') + ','
+        #ignore non printable characters - replace with question mark
+        output += "".join([x if 31 < ord(x) < 128 else '?' for x in v.response.data[10:26].decode('hex')]) + ','
         output += v.response.data[26:30] + ','
         output += v.response.data[30:32] + ','
         #loop over the end of the table definition to define the rows in the table
