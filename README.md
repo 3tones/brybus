@@ -12,6 +12,8 @@ scanalldata.py uses myregisters.csv to read all valid data registers, and output
 
 tableascii.py reads mydata.txt and outputs any valid ASCII data.
 
+dblogger.py keeps track of registers in an internal table, and logs changes to mysql if the register changes.
+
 Requirements
 ============
 http://pyserial.sourceforge.net/
