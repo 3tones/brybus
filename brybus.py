@@ -45,29 +45,40 @@ class bus:
     self.timetrigger = False
     self.lastfunc = ''
     self.timeout = 0.02
+    self.buf= ""
   
   def read(self):
-    head = self.stream.read(8)
+    frame = ""
+    self.locked = 0
 
-    #check to make sure we're looking at the header
+    #make sure we have enough data in the buffer to check for the size of the frame
+    while len(self.buf)<10:
+      self.buf += self.stream.read(1)
+	
+    #fill the buffer to the frame size, then check the crc
     while not self.locked:
-      self.locked = 0
-      if head[1]=='\x01' or head[1]=='\xF1':
-        if head[3]=='\x01':
-          if head[5]=='\x00' and head[6]=='\x00':
-            self.locked = 1
-      if self.locked == 0:
-        #print "not locked - discarding 1 byte"
-        head = head[1:]
-        head += self.stream.read(1)
+      frame_len = ord(self.buf[4])+10
+      if len(self.buf) >= frame_len:
+        frame = self.buf[:frame_len]
+		#calculate crc of the frame
+        crc16 = 0x0000
+        for ch in frame:
+          crc16 = calcByte(ch, crc16)
+        if crc16 == 0:
+          self.locked = 1
+        else:
+          print "SEEKING"
+          self.buf = self.buf[1:]
+      else:
+        self.buf += self.stream.read(1)
     
     #set lastfunc for testing before write
-    self.lastfunc = ByteToHex(head[7])
-    #get the length to read from the header
-    readlen = int(ByteToHex(head[4]),16)
-    #read len+2 for data and checksum (the rest of the frame)
-    data = self.stream.read(2+readlen)  
-    return head + data
+    self.lastfunc = ByteToHex(frame[7])
+	
+    #cut data that will be returned off the beginning of the buffer
+    self.buf = self.buf[frame_len:]
+
+    return frame
   
   def write(self,data):
     #blocking call to test when it is ok to write - then write if OK
