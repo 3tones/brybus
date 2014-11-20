@@ -4,9 +4,19 @@ import time
 writestart =  time.time()
 format = '%x %X'
 import csv
+import ConfigParser
+
+cfg = ConfigParser.ConfigParser()
+cfg.read('brybus.cfg')
+serialport = cfg.get('brybus','serialport')
+database = cfg.get('db','database')
+mysql_host = cfg.get('db','mysql_host')
+mysql_user = cfg.get('db','mysql_user')
+mysql_pass = cfg.get('db','mysql_pass')
+mysql_db = cfg.get('db','mysql_db')
 
 import _mysql
-db=_mysql.connect("dbhost","dbuser","dbpass","dbname")
+db=_mysql.connect(mysql_host,mysql_user,mysql_pass,mysql_db)
 
 '''
 Use this SQL code to create the table to log data to:
@@ -78,7 +88,7 @@ q = scantable()
 #q.printqueue()
 
 #setup the stream and bus
-s = brybus.stream('S','/dev/ttyUSB0')
+s = brybus.stream('S',serialport)
 b = brybus.bus(s)
 
 table=[]

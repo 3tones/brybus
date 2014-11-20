@@ -6,6 +6,11 @@
 
 import time
 import brybus
+import ConfigParser
+
+cfg = ConfigParser.ConfigParser()
+cfg.read('brybus.cfg')
+serialport = cfg.get('brybus','serialport')
 
 #build a frame if you already know it
 f1 = brybus.frame('400130010300000B000101',"S")
@@ -22,7 +27,7 @@ q.pushframe(f2)
 q.printqueue()
 
 #setup the stream and bus
-s = brybus.stream('S','/dev/ttyUSB0')
+s = brybus.stream('S',serialport)
 b = brybus.bus(s)
 
 #loop forever

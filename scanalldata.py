@@ -5,6 +5,13 @@ scriptstart =  time.time()
 import csv
 
 import brybus
+import ConfigParser
+
+cfg = ConfigParser.ConfigParser()
+cfg.read('brybus.cfg')
+serialport = cfg.get('brybus','serialport')
+scan_registers = cfg.get('scanner','scan_registers')
+scan_data = cfg.get('scanner','scan_data')
 
 def scantable():
   #load data from csv
@@ -12,7 +19,7 @@ def scantable():
   
   #load CSV into memory
   registers = []
-  tfin = csv.reader(open('myregisters.csv', 'rb'))
+  tfin = csv.reader(open(scan_registers, 'rb'))
   for row in tfin:
     registers.append(row)
   
@@ -32,7 +39,7 @@ q = scantable()
 q.printqueue()
 
 #setup the stream and bus
-s = brybus.stream('S','/dev/ttyUSB0')
+s = brybus.stream('S',serialport)
 b = brybus.bus(s)
 
 while(1):
@@ -52,7 +59,7 @@ while(1):
   if q.writeframe() == '':
     q.printqueue()
 	
-    f = open('mydata.txt', 'w')
+    f = open(scan_data, 'w')
     f.write(q.print_str())
     f.close()
 	

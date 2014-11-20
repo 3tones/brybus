@@ -6,9 +6,15 @@ import time
 scriptstart =  time.time()
 
 import brybus
+import ConfigParser
+
+cfg = ConfigParser.ConfigParser()
+cfg.read('brybus.cfg')
+serialport = cfg.get('brybus','serialport')
+scan_registers=cfg.get('scanner','scan_registers')
 
 #setup the stream and bus
-s = brybus.stream('S','/dev/ttyUSB0')
+s = brybus.stream('S',serialport)
 b = brybus.bus(s)
 phase = 0
 
@@ -33,7 +39,8 @@ while(1):
     #loop to read a frame and build a list of devices
     f = brybus.frame(b.read(),"B") 
     if f.src not in devices:
-      devices.append(f.src)
+      if f.src not in ('0000','00F1'):
+        devices.append(f.src)
 
   #use device list to build a queue of all possible tables, scan them all
   if phase==1:
@@ -83,7 +90,7 @@ while(1):
 
     print "==start all valid table row combinations =="    
     #write csv to console to build final output
-    f = open('myregisters.csv', 'w')
+    f = open(scan_registers, 'w')
 	
     for k,v in ph1_q.queue.iteritems():
       #for responses that were not an error

@@ -1,6 +1,11 @@
 import csv  
 
 import brybus
+import ConfigParser
+
+cfg = ConfigParser.ConfigParser()
+cfg.read('brybus.cfg')
+scan_data = cfg.get('scanner','scan_data')
 
 from curses.ascii import isprint
 
@@ -11,7 +16,7 @@ def printable(input):
 def main():  
   #load CSV into memory
   data = []
-  tfin = csv.reader(open('mydata.txt', 'rb'), delimiter=' ')
+  tfin = csv.reader(open(scan_data, 'rb'), delimiter=' ')
   for row in tfin:
     f = brybus.frame(row[2],"S")
     s = printable(f.data.decode('hex'))
