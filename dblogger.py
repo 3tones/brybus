@@ -14,22 +14,43 @@ mysql_host = cfg.get('db','mysql_host')
 mysql_user = cfg.get('db','mysql_user')
 mysql_pass = cfg.get('db','mysql_pass')
 mysql_db = cfg.get('db','mysql_db')
+sqlitefile = cfg.get('db','sqlitefile')
 
-import _mysql
-db=_mysql.connect(mysql_host,mysql_user,mysql_pass,mysql_db)
-
-'''
-Use this SQL code to create the table to log data to:
-
-CREATE TABLE `data` (
-	`ts` DATETIME NOT NULL,
-	`request` VARCHAR(25) NULL DEFAULT NULL,
-	`response` VARCHAR(350) NULL DEFAULT NULL,
-	INDEX `ts` (`ts`)
-)
-'''
-
-
+if database == 'mysql':
+  try:
+    import _mysql
+    db=_mysql.connect(mysql_host,mysql_user,mysql_pass,mysql_db)
+    schema_sql = """
+    CREATE TABLE if not exists data2 (
+    ts DATETIME NOT NULL,
+    request VARCHAR(25) NULL DEFAULT NULL,
+    response VARCHAR(350) NULL DEFAULT NULL,
+    INDEX ts (ts)
+    )
+    """
+    db.query(schema_sql)
+  except _mysql.Error, e:
+    print "Error %d: %s" % (e.args[0], e.args[1])
+    quit()
+elif database == 'sqlite':
+  try:
+    import sqlite3  
+    dbh=sqlite3.connect(sqlitefile, isolation_level=None)
+    db = dbh.cursor();
+    schema_sql = """
+    begin;
+    create table if not exists data (
+    ts timestamp not null,
+    request varchar(25),
+    response varchar(350)
+    );
+    create index if not exists ts_index on data(ts);
+    commit;""";
+    db.executescript(schema_sql)
+  except sqlite3.Error, e:
+    print "sqlite error: %s" % (e.args[0])
+    quit()
+    
 import brybus
 ByteToHex = brybus.ByteToHex
 HexToByte = brybus.HexToByte
@@ -81,6 +102,15 @@ def scantable():
     scan_q.pushframe(f)
         
   return scan_q  
+  
+def db_insert(head,data):
+  if database == 'mysql':
+    query = "insert into data2 values (now(),'"+head+"','"+data+"')"
+    db.query(query)
+  elif database == 'sqlite':
+    query = "insert into data values (datetime('now'),'"+head+"','"+data+"')"
+    db.execute(query)  
+    
 
 #=======main========
 
@@ -93,8 +123,7 @@ b = brybus.bus(s)
 
 table=[]
 
-query = "insert into data values (now(),'START','START')"
-db.query(query)
+db_insert("START","START")
 
 while(1):
   #get write frame and write it 
@@ -126,14 +155,13 @@ while(1):
         #print "NC", time.strftime(format), ByteToHex(f.raw[0:11]),f.data[6:]
       else:
         row[1]=f.data[6:]
-        query = "insert into data values (now(),'"+ByteToHex(f.raw[0:11])+"','"+f.data[6:]+"')"
-        db.query(query)
+        db_insert(ByteToHex(f.raw[0:11]),f.data[6:])
+        #db.query(query)
         print " C", time.strftime(format), ByteToHex(f.raw[0:11]),f.data[6:]
       found=1
 
   if found==0 and (f.func in ('0C','06')):
     table.append([ByteToHex(f.raw[0:11]),f.data[6:]])
-    query = "insert into data values (now(),'"+ByteToHex(f.raw[0:11])+"','"+f.data[6:]+"')"
-    db.query(query)
+    db_insert(ByteToHex(f.raw[0:11]),f.data[6:])
     print " A",time.strftime(format), ByteToHex(f.raw[0:11]),f.data[6:]
-
+    
