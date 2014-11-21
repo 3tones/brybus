@@ -21,14 +21,23 @@ if database == 'mysql':
     import _mysql
     db=_mysql.connect(mysql_host,mysql_user,mysql_pass,mysql_db)
     schema_sql = """
-    CREATE TABLE if not exists data2 (
+    CREATE TABLE if not exists data (
     ts DATETIME NOT NULL,
     request VARCHAR(25) NULL DEFAULT NULL,
     response VARCHAR(350) NULL DEFAULT NULL,
     INDEX ts (ts)
-    )
+    );
+    """
+    schema_sql2 = """
+    CREATE TABLE if not exists realtime (
+    ts DATETIME NULL DEFAULT NULL,
+    request VARCHAR(25) NULL DEFAULT NULL,
+    response VARCHAR(350) NULL DEFAULT NULL,
+    UNIQUE INDEX request_idx (request)
+    );
     """
     db.query(schema_sql)
+    db.query(schema_sql2)
   except _mysql.Error, e:
     print "Error %d: %s" % (e.args[0], e.args[1])
     quit()
@@ -105,11 +114,20 @@ def scantable():
   
 def db_insert(head,data):
   if database == 'mysql':
-    query = "insert into data2 values (now(),'"+head+"','"+data+"')"
+    query = "insert into data values (now(),'"+head+"','"+data+"')"
     db.query(query)
+    db_update(head,data)
   elif database == 'sqlite':
     query = "insert into data values (datetime('now'),'"+head+"','"+data+"')"
     db.execute(query)  
+    
+def db_update(head,data):
+  if database == 'mysql':
+    query = "insert into realtime (ts,request,response) values (now(),'"+head+"','"+data+"') ON DUPLICATE KEY UPDATE ts=VALUES(ts), response=VALUES(response)"
+    db.query(query)
+
+
+
     
 
 #=======main========
@@ -132,8 +150,8 @@ while(1):
   w = b.write(wf_raw)
   
   f = brybus.frame(b.read(),"B")
-  if w==1:
-    print "write", q.printstatus()
+  #if w==1:
+    #print "write", q.printstatus()
     #print wf.dst,wf.src,wf.len,wf.func,wf.data,wf.crc
     #print f.dst,f.src,f.len,f.func,f.data,f.crc
 
@@ -142,7 +160,7 @@ while(1):
  
   #test for end of queue, then restart the queue
   if q.writeframe() == '':
-    print "Seconds Elapsed:",(time.time()-writestart)
+    print "Write Queue Done. Seconds Elapsed:",(time.time()-writestart)
     writestart =  time.time()
     for k,v in q.queue.iteritems():
       v.done = False    
@@ -152,6 +170,7 @@ while(1):
     if row[0] == ByteToHex(f.raw[0:11]):
       if row[1] == f.data[6:]:
         1==1 #no change
+        db_update(ByteToHex(f.raw[0:11]),f.data[6:])
         #print "NC", time.strftime(format), ByteToHex(f.raw[0:11]),f.data[6:]
       else:
         row[1]=f.data[6:]
